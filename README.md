@@ -32,6 +32,6 @@ import tcp from 'k6/x/tcp';
 const conn = tcp.connect('host:port')
 
 export default function () {
-  tcp.write(conn, 'some data');
+  tcp.write(conn, 'some data\n'); // or tcp.writeLn(conn, 'some data')
 }
 ```

@@ -12,7 +12,7 @@ func init() {
 
 type TCP struct{}
 
-func (TCP) Connect(addr string) (net.Conn, error) {
+func (tcp *TCP) Connect(addr string) (net.Conn, error) {
 	conn, err := net.Dial("tcp", addr)
 	if err != nil {
 		return nil, err
@@ -21,11 +21,15 @@ func (TCP) Connect(addr string) (net.Conn, error) {
 	return conn, nil
 }
 
-func (TCP) Write(conn net.Conn, data []byte) error {
-	_, err := conn.Write(append(data, []byte("\n")...))
+func (tcp *TCP) Write(conn net.Conn, data []byte) error {
+	_, err := conn.Write(data)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func (tcp *TCP) WriteLn(conn net.Conn, data []byte) error {
+	return tcp.Write(conn, append(data, []byte("\n")...))
 }
