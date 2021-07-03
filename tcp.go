@@ -21,8 +21,8 @@ func (TCP) Connect(addr string) (net.Conn, error) {
 	return conn, nil
 }
 
-func (TCP) Write(conn net.Conn, data string) error {
-	_, err := conn.Write([]byte(data + "\n"))
+func (TCP) Write(conn net.Conn, data []byte) error {
+	_, err := conn.Write(append(data, []byte("\n")...))
 	if err != nil {
 		return err
 	}
