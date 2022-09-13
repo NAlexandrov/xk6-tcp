@@ -28,10 +28,16 @@ Then:
 
 ```javascript
 import tcp from 'k6/x/tcp';
+import { check } from 'k6';
 
-const conn = tcp.connect('host:port')
+const conn = tcp.connect('host:port');
 
 export default function () {
-  tcp.write(conn, 'some data\n'); // or tcp.writeLn(conn, 'some data')
+  tcp.writeLn(conn, 'Say Hello');
+  let res = String.fromCharCode(...tcp.read(conn, 1024))
+  check (res, {
+    'verify ag tag': (res) => res.includes('Hello')
+  });
+  tcp.close(conn);
 }
 ```
