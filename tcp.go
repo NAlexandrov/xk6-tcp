@@ -1,10 +1,9 @@
 package tcp
 
 import (
-	"net"
-
 	"go.k6.io/k6/js/modules"
-
+	"net"
+	"time"
 )
 
 func init() {
@@ -31,9 +30,17 @@ func (tcp *TCP) Write(conn net.Conn, data []byte) error {
 	return nil
 }
 
-func (tcp *TCP) Read(conn net.Conn, size int) ([]byte, error) {
+func (tcp *TCP) Read(conn net.Conn, size int, timeout_opt ...int) ([]byte, error) {
+	timeout_ms := 0
+	if len(timeout_opt) > 0 {
+		timeout_ms = timeout_opt[0]
+	}
+	err := conn.SetReadDeadline(time.Now().Add(time.Millisecond * time.Duration(timeout_ms)))
+	if err != nil {
+		return nil, err
+	}
 	buf := make([]byte, size)
-	_, err := conn.Read(buf)
+	_, err = conn.Read(buf)
 	if err != nil {
 		return nil, err
 	}
