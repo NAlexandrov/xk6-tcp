@@ -21,7 +21,7 @@ Then:
 
   ```shell
   xk6 build master \
-    --with github.com/NAlexandrov/xk6-tcp
+    --with github.com/hptabster/xk6-tcp
   ```
 
 ## Example
