@@ -4,7 +4,6 @@ import (
 	"net"
 
 	"go.k6.io/k6/js/modules"
-
 )
 
 func init() {
@@ -33,11 +32,11 @@ func (tcp *TCP) Write(conn net.Conn, data []byte) error {
 
 func (tcp *TCP) Read(conn net.Conn, size int) ([]byte, error) {
 	buf := make([]byte, size)
-	_, err := conn.Read(buf)
+	n, err := conn.Read(buf)
 	if err != nil {
 		return nil, err
 	}
-	return buf, nil
+	return buf[:n], nil
 }
 
 func (tcp *TCP) WriteLn(conn net.Conn, data []byte) error {
