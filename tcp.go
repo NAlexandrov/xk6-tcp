@@ -4,7 +4,6 @@ import (
 	"net"
 
 	"go.k6.io/k6/js/modules"
-
 )
 
 func init() {
