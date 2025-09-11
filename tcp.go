@@ -6,11 +6,29 @@ import (
 	"go.k6.io/k6/js/modules"
 )
 
-func init() {
-	modules.Register("k6/x/tcp", new(TCP))
+// RootModule is the global module instance that will create module instances for each VU.
+type RootModule struct{}
+
+// Ensure the interfaces are implemented correctly.
+var _ modules.Module = &RootModule{}
+
+type TCP struct {
+	vu modules.VU // provides methods for accessing internal k6 objects
 }
 
-type TCP struct{}
+// init is called by the Go runtime at application startup.
+func init() {
+	modules.Register("k6/x/tcp", new(RootModule))
+}
+
+// NewModuleInstance implements the modules.Module interface returning a new instance for each VU.
+func (*RootModule) NewModuleInstance(vu modules.VU) modules.Instance {
+	return &TCP{vu: vu}
+}
+
+func (tcp *TCP) Exports() modules.Exports {
+	return modules.Exports{Default: tcp}
+}
 
 func (tcp *TCP) Connect(addr string) (net.Conn, error) {
 	conn, err := net.Dial("tcp", addr)
