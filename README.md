@@ -13,16 +13,15 @@ Then:
 
 1. Install `xk6`:
 
-  ```shell
-  go install github.com/k6io/xk6/cmd/xk6@latest
-  ```
+```sh
+go install go.k6.io/xk6/cmd/xk6@latest
+```
 
 2. Build the binary:
 
-  ```shell
-  xk6 build master \
-    --with github.com/NAlexandrov/xk6-tcp
-  ```
+```sh
+xk6 build --with github.com/NAlexandrov/xk6-tcp@latest
+```
 
 ## Example
 
@@ -32,12 +31,21 @@ import { check } from 'k6';
 
 const conn = tcp.connect('host:port');
 
+// Or with timeout 5 seconds
+// const conn = tcp.connect('host:port', 5000);
+
 export default function () {
   tcp.writeLn(conn, 'Say Hello');
+
   let res = String.fromCharCode(...tcp.read(conn, 1024))
+
+  // Or with timeout 5 seconds
+  // let res = String.fromCharCode(...tcp.read(conn, 1024, 5000))
+
   check (res, {
     'verify ag tag': (res) => res.includes('Hello')
   });
+
   tcp.close(conn);
 }
 ```
