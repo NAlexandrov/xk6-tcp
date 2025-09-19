@@ -37,6 +37,9 @@ const conn = tcp.connect('host:port');
 export default function () {
   tcp.writeLn(conn, 'Say Hello');
 
+  // Or with timeout 5 seconds
+  // tcp.writeLn(conn, 'Say Hello', 5000);
+
   let res = String.fromCharCode(...tcp.read(conn, 1024))
 
   // Or with timeout 5 seconds

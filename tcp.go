@@ -48,8 +48,21 @@ func (tcp *TCP) Connect(addr string, timeoutMs ...int) (net.Conn, error) {
 	return conn, nil
 }
 
-func (tcp *TCP) Write(conn net.Conn, data []byte) error {
-	_, err := conn.Write(data)
+func (tcp *TCP) Write(conn net.Conn, data []byte, timeoutMs ...int) error {
+	timeout := 60 * time.Second // default timeout
+
+	if len(timeoutMs) > 0 {
+		if timeoutMs[0] > 0 {
+			timeout = time.Duration(timeoutMs[0]) * time.Millisecond
+		}
+	}
+
+	err := conn.SetReadDeadline(time.Now().Add(timeout))
+	if err != nil {
+		return err
+	}
+
+	_, err = conn.Write(data)
 	if err != nil {
 		return err
 	}
@@ -81,8 +94,8 @@ func (tcp *TCP) Read(conn net.Conn, size int, timeoutMs ...int) ([]byte, error) 
 	return buf, nil
 }
 
-func (tcp *TCP) WriteLn(conn net.Conn, data []byte) error {
-	return tcp.Write(conn, append(data, []byte("\n")...))
+func (tcp *TCP) WriteLn(conn net.Conn, data []byte, timeoutMs ...int) error {
+	return tcp.Write(conn, append(data, []byte("\n")...), timeoutMs...)
 }
 
 func (tcp *TCP) Close(conn net.Conn) error {
