@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"go.k6.io/k6/js/modules"
+	"go.k6.io/k6/metrics"
 )
 
 // RootModule is the global module instance that will create module instances for each VU.
@@ -14,7 +15,9 @@ type RootModule struct{}
 var _ modules.Module = &RootModule{}
 
 type TCP struct {
-	vu modules.VU // provides methods for accessing internal k6 objects
+	vu    modules.VU // provides methods for accessing internal k6 objects
+	dsCtr *metrics.Metric
+	drCtr *metrics.Metric
 }
 
 // init is called by the Go runtime at application startup.
@@ -24,7 +27,13 @@ func init() {
 
 // NewModuleInstance implements the modules.Module interface returning a new instance for each VU.
 func (*RootModule) NewModuleInstance(vu modules.VU) modules.Instance {
-	return &TCP{vu: vu}
+	e := vu.InitEnv()
+	if e == nil {
+		panic("vu env is nil")
+	}
+	dsCtr := e.Registry.Get("data_sent")
+	drCtr := e.Registry.Get("data_received")
+	return &TCP{vu: vu, dsCtr: dsCtr, drCtr: drCtr}
 }
 
 func (tcp *TCP) Exports() modules.Exports {
@@ -62,10 +71,18 @@ func (tcp *TCP) Write(conn net.Conn, data []byte, timeoutMs ...int) error {
 		return err
 	}
 
-	_, err = conn.Write(data)
+	n, err := conn.Write(data)
 	if err != nil {
 		return err
 	}
+
+	state := tcp.vu.State()
+	tags := state.Tags.GetCurrentValues().Tags
+	metrics.PushIfNotDone(tcp.vu.Context(), state.Samples, metrics.Sample{
+		TimeSeries: metrics.TimeSeries{Metric: tcp.dsCtr, Tags: tags},
+		Value:      float64(n),
+		Time:       time.Now(),
+	})
 
 	return nil
 }
@@ -86,12 +103,20 @@ func (tcp *TCP) Read(conn net.Conn, size int, timeoutMs ...int) ([]byte, error) 
 
 	buf := make([]byte, size)
 
-	_, err = conn.Read(buf)
+	n, err := conn.Read(buf)
 	if err != nil {
 		return nil, err
 	}
 
-	return buf, nil
+	state := tcp.vu.State()
+	tags := state.Tags.GetCurrentValues().Tags
+	metrics.PushIfNotDone(tcp.vu.Context(), state.Samples, metrics.Sample{
+		TimeSeries: metrics.TimeSeries{Metric: tcp.drCtr, Tags: tags},
+		Value:      float64(n),
+		Time:       time.Now(),
+	})
+
+	return buf[:n], nil
 }
 
 func (tcp *TCP) WriteLn(conn net.Conn, data []byte, timeoutMs ...int) error {
